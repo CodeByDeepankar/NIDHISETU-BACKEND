@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const OLLAMA_ENDPOINT = 'http://172.29.96.1:11434/api/chat';
-const MODEL_NAME = 'gemma3:4b';
-const VISION_MODEL_NAME = 'gemma3:4b';
+const OLLAMA_ENDPOINT = process.env.OLLAMA_ENDPOINT || 'http://127.0.0.1:11434/api/chat';
+const MODEL_NAME = process.env.OLLAMA_MODEL || 'gemma3:4b';
+const VISION_MODEL_NAME = process.env.OLLAMA_VISION_MODEL || 'gemma3:4b';
 
 app.post('/api/loan-assistant', async (req, res) => {
   try {
@@ -250,11 +250,11 @@ app.post('/api/analyze-evidence', async (req, res) => {
     // Convert to base64 for Ollama
     const base64Image = buffer.toString('base64');
 
-    const systemPrompt = `Identify the object in the image and respond ONLY in this format:
+    const systemPrompt = `Analyze the image and respond ONLY in this format:
 
-object: <object name or 'unknown'>
-brand: <brand name or 'unknown'>
-model: <model name or 'unknown'>
+object: <main physical object or material seen (e.g., Tractor, Machine, Farm, Shop). Do NOT describe UI, text, or screenshots.>
+image_quality: <good, bad, or best>
+remarks: <brief description of the visual content, focusing on the asset>
 
 No extra text. No explanation.`;
 
@@ -297,12 +297,12 @@ No extra text. No explanation.`;
     // Ensure keys match our interface
     const mappedAnalysis = {
       object: analysis['object'] || 'Unknown',
-      secondary_objects: analysis['brand'] ? `Brand: ${analysis['brand']}` : 'None',
-      image_quality_check: 'Pass',
+      secondary_objects: 'None', // simplified for now
+      image_quality_check: analysis['image_quality'] || 'good',
       document_check: 'N/A',
       geo_timestamp_check: 'Valid',
       compliance_status: 'Pending',
-      remarks: analysis['model'] ? `Model: ${analysis['model']}` : 'No remarks'
+      remarks: analysis['remarks'] || 'AI Analysis completed'
     };
 
     res.json(mappedAnalysis);
